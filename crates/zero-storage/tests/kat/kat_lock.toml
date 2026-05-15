@@ -1,0 +1,20 @@
+# KAT (Known Answer Test) lock file for zero-storage sector codec.
+#
+# This file records metadata about the KAT vectors committed alongside it.
+# Any change to the Sector struct field order, types, or postcard encoding
+# must be accompanied by regenerating sector_kat.json and updating this file.
+
+[codec]
+format = "postcard"
+struct_name = "Sector"
+fields = ["id", "kind", "identity_id", "machine_id", "created_at", "payload", "prev"]
+
+[vectors]
+file = "sector_kat.json"
+count = 3
+generated_with = "zero-storage kat_test::generate_vectors"
+
+[vectors.names]
+0 = "minimal - no prev, empty payload"
+1 = "full - with prev, non-empty payload"
+2 = "edge - large payload, long strings"

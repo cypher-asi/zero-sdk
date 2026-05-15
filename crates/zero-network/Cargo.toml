@@ -1,0 +1,22 @@
+[package]
+name = "zero-network"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "GRID network client trait, in-memory mock broker, and outbox retry pump for the zero-sdk."
+
+[dependencies]
+zero-storage = { path = "../zero-storage" }
+tokio = { workspace = true, features = ["sync", "rt", "time", "macros"] }
+thiserror.workspace = true
+async-trait.workspace = true
+futures-core.workspace = true
+tokio-stream = "0.1"
+
+# TODO: Pin the-grid git dep at exact SHA once upstream repo access is confirmed.
+# the-grid = { git = "https://github.com/cypher-asi/the-grid", rev = "TBD" }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }

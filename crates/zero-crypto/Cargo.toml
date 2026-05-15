@@ -1,0 +1,33 @@
+[package]
+name = "zero-crypto"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Cryptographic envelope for the zero-sdk: HPKE-PQ-hybrid AEAD, dual-signing, canonical CBOR AAD, and MLS group-key helpers."
+
+[dependencies]
+zero-identity = { path = "../zero-identity" }
+thiserror.workspace = true
+serde.workspace = true
+ciborium = "0.2"
+chacha20poly1305 = "0.10"
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+hpke = "0.12"
+ml-kem = "0.2"
+pqcrypto-mldsa = "0.1"
+pqcrypto-traits = "0.3"
+openmls = "0.6"
+openmls_rust_crypto = "0.3"
+openmls_basic_credential = "0.3"
+hkdf.workspace = true
+sha2.workspace = true
+rand.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+serde_json.workspace = true
+hex.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

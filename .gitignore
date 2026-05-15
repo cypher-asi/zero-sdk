@@ -1,0 +1,27 @@
+# Rust build output
+/target/
+**/target/
+
+# Cargo
+Cargo.lock.bak
+**/*.rs.bk
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log

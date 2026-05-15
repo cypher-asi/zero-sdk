@@ -1,0 +1,29 @@
+{
+  "description": "KAT vectors for MessageAad canonical CBOR encoding (RFC 8949 deterministic)",
+  "vectors": [
+    {
+      "label": "no_prev_sector_id",
+      "input": {
+        "schema_tag": 1,
+        "sector_id_hex": "01010101010101010101010101010101",
+        "sender_identity_hex": "02020202020202020202020202020202",
+        "sender_machine_hex": "03030303030303030303030303030303",
+        "epoch": 42,
+        "prev_sector_id_hex": null
+      },
+      "expected_cbor_hex": "a66565706f6368182a6e707265765f736563746f725f6964f66a736368656d615f7461670169736563746f725f696450010101010101010101010101010101016f73656e6465725f6964656e7469747950020202020202020202020202020202026e73656e6465725f6d616368696e655003030303030303030303030303030303"
+    },
+    {
+      "label": "with_prev_sector_id",
+      "input": {
+        "schema_tag": 256,
+        "sector_id_hex": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sender_identity_hex": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "sender_machine_hex": "cccccccccccccccccccccccccccccccc",
+        "epoch": 1000,
+        "prev_sector_id_hex": "dddddddddddddddddddddddddddddddd"
+      },
+      "expected_cbor_hex": "a66565706f63681903e86e707265765f736563746f725f696450dddddddddddddddddddddddddddddddd6a736368656d615f74616719010069736563746f725f696450aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa6f73656e6465725f6964656e7469747950bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb6e73656e6465725f6d616368696e6550cccccccccccccccccccccccccccccccc"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+# Auto-generated KAT lock file. Do not edit manually.
+aad_kat_json = "0693ff360cd8bdddd5e0d0d9bd793c6fbe2ad7e8bf0a682c5b5d913d8b941efb"
+dual_sign_kat_json = "b3a55bbd95c1916ebd6e44cbcc75dea4f67d07b2834db1f470780d8bd3f3923e"
+hpke_kat_json = "4d60068dde0cbd8bc7e710850d94db40fa0937ea4cf00cfb46ef9ca92fb10982"

@@ -1,0 +1,37 @@
+[package]
+name = "zero-messaging"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Messaging primitives for the zero-sdk: contacts, conversations, and group management."
+
+[dependencies]
+zero-storage = { path = "../zero-storage" }
+zero-crypto = { path = "../zero-crypto" }
+zero-network = { path = "../zero-network" }
+thiserror.workspace = true
+serde.workspace = true
+postcard.workspace = true
+blake3.workspace = true
+uuid = { workspace = true, features = ["v7"] }
+rocksdb = "0.22"
+tokio = { workspace = true, features = ["rt", "sync", "macros"] }
+futures-core.workspace = true
+async-trait.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+proptest.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
+criterion = { version = "0.5", features = ["html_reports"] }
+sysinfo = "0.31"
+
+[[bench]]
+name = "dm_bench"
+harness = false
+
+[[bench]]
+name = "inbox_bench"
+harness = false

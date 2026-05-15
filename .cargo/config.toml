@@ -1,0 +1,8 @@
+# Shared target directory keeps incremental builds out of each crate's tree.
+[build]
+target-dir = "target"
+
+# Workspace-wide lint baseline. Individual crates may tighten further via
+# crate-level attributes (e.g. #![deny(warnings)] in lib.rs).
+[target.'cfg(all())']
+rustflags = []

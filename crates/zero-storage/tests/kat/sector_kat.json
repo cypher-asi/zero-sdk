@@ -1,0 +1,37 @@
+{
+  "vectors": [
+    {
+      "name": "minimal - empty payload, no prev",
+      "sector_id_hex": "00000000000000000000000000000001",
+      "kind": "zero.chat.v1",
+      "identity_id": "alice",
+      "machine_id": "m1",
+      "created_at": 1000,
+      "payload_hex": "",
+      "prev_hex": null,
+      "encoded_hex": "000000000000000000000000000000010c7a65726f2e636861742e763105616c696365026d31e8070000"
+    },
+    {
+      "name": "with payload and prev",
+      "sector_id_hex": "00000000000000000000000000000002",
+      "kind": "zero.file.v1",
+      "identity_id": "bob",
+      "machine_id": "desktop",
+      "created_at": 999999,
+      "payload_hex": "deadbeef",
+      "prev_hex": "00000000000000000000000000000001",
+      "encoded_hex": "000000000000000000000000000000020c7a65726f2e66696c652e763103626f62076465736b746f70bf843d04deadbeef0100000000000000000000000000000001"
+    },
+    {
+      "name": "large created_at value",
+      "sector_id_hex": "01900000000070008000000000000003",
+      "kind": "zero.contact.v1",
+      "identity_id": "carol",
+      "machine_id": "phone",
+      "created_at": 1700000000000,
+      "payload_hex": "010203",
+      "prev_hex": null,
+      "encoded_hex": "019000000000700080000000000000030f7a65726f2e636f6e746163742e7631056361726f6c0570686f6e6580d095ffbc310301020300"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[package]
+name = "zero-sdk"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+zero-crypto = { path = "../zero-crypto" }
+zero-identity = { path = "../zero-identity" }
+zero-storage = { path = "../zero-storage" }
+zero-messaging = { path = "../zero-messaging" }
+zero-network = { path = "../zero-network" }
+
+blake3.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+sysinfo = "0.31"

@@ -45,9 +45,10 @@ const TOPIC_CHANNEL_CAPACITY: usize = 256;
 /// drain them, in which case `send` will simply yield until there is room.
 const COMMAND_CHANNEL_CAPACITY: usize = 64;
 
-/// How long `connect` will drive the swarm waiting for the dial to either
-/// succeed (`PeerConnected`) or fail (`ConnectionFailed`).
-const CONNECT_TIMEOUT: Duration = Duration::from_secs(15);
+/// Default budget [`RealGridClient::connect`] uses when the caller does
+/// not pass an explicit timeout. NAT/relay hops over GRID can routinely
+/// take longer than the previous 15s value, so we now default to 30s.
+const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Local listen address. We bind to an ephemeral UDP port via QUIC v1 so two
 /// clients in the same process never fight over a fixed port.
@@ -68,7 +69,21 @@ pub struct RealGridClient {
 
 impl RealGridClient {
     /// Dial the GRID node at `multiaddr` and bring up an event loop ready to
-    /// pump GossipSub traffic.
+    /// pump GossipSub traffic, using the [`DEFAULT_CONNECT_TIMEOUT`] budget
+    /// for the libp2p handshake.
+    ///
+    /// Thin wrapper around [`Self::connect_with_timeout`]; see that method
+    /// for the error contract.
+    pub async fn connect(multiaddr: &str) -> Result<Self, NetworkError> {
+        Self::connect_with_timeout(multiaddr, DEFAULT_CONNECT_TIMEOUT).await
+    }
+
+    /// Like [`Self::connect`] but with a caller-supplied dial timeout.
+    ///
+    /// Useful for callers (zos-grid, embedded server) that surface the
+    /// timeout as a user-tunable knob: NAT / relay hops can blow past the
+    /// 30s default, so we let the operator widen the budget rather than
+    /// flapping the connection pill.
     ///
     /// # Errors
     ///
@@ -77,8 +92,11 @@ impl RealGridClient {
     ///   transport cannot be built), or when the upstream reports a dial
     ///   failure for the target peer.
     /// * [`NetworkError::Timeout`] when the libp2p handshake does not
-    ///   complete within [`CONNECT_TIMEOUT`].
-    pub async fn connect(multiaddr: &str) -> Result<Self, NetworkError> {
+    ///   complete within `timeout`.
+    pub async fn connect_with_timeout(
+        multiaddr: &str,
+        timeout: Duration,
+    ) -> Result<Self, NetworkError> {
         // Strip the display-only `Zx` prefix from the trailing `/p2p/<peer>`
         // segment so libp2p's parser can recover the raw `PeerId`.
         let parsed_str = strip_zx_multiaddr(multiaddr).into_owned();
@@ -103,7 +121,7 @@ impl RealGridClient {
         // Drive the swarm until the target peer is connected, the dial
         // explicitly fails, or the timeout fires.
         let dial_result = tokio::time::timeout(
-            CONNECT_TIMEOUT,
+            timeout,
             await_dial_completion(&mut service, target_peer),
         )
         .await;
@@ -341,8 +359,9 @@ mod tests {
     ///
     /// We use `192.0.2.1` (TEST-NET-1, RFC 5737) which is guaranteed
     /// non-routable and a randomly-generated peer id so libp2p has a
-    /// concrete dial target. The test drives a short timeout to keep
-    /// CI snappy.
+    /// concrete dial target. The test drives [`connect_with_timeout`]
+    /// directly with a 5s budget so CI fails fast rather than waiting
+    /// out the full 30s default.
     #[tokio::test]
     async fn connect_to_unreachable_peer_returns_some_network_error() {
         // Random PeerId derived from a fresh ed25519 keypair so the dial has
@@ -350,12 +369,13 @@ mod tests {
         let peer = grid_net::Keypair::generate_ed25519().public().to_peer_id();
         let unreachable = format!("/ip4/192.0.2.1/udp/65530/quic-v1/p2p/{peer}");
 
-        // Use `tokio::time::timeout` with a budget shorter than CONNECT_TIMEOUT
-        // so the test fails fast even when libp2p doesn't surface a quick
-        // ConnectionFailed for our test address.
-        let result =
-            tokio::time::timeout(Duration::from_secs(20), RealGridClient::connect(&unreachable))
-                .await;
+        // Outer `tokio::time::timeout` is a belt-and-braces guard in case
+        // the inner timeout machinery is broken; it should never fire.
+        let result = tokio::time::timeout(
+            Duration::from_secs(20),
+            RealGridClient::connect_with_timeout(&unreachable, Duration::from_secs(5)),
+        )
+        .await;
 
         match result {
             Ok(Err(e)) => {

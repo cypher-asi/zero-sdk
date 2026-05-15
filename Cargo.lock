@@ -4963,8 +4963,14 @@ name = "zero-identity"
 version = "0.1.0"
 dependencies = [
  "blake3",
+ "chacha20poly1305",
+ "ciborium",
+ "hkdf",
  "rand 0.8.6",
+ "serde",
+ "sha2",
  "thiserror 1.0.69",
+ "zeroize",
  "zid 0.2.0 (git+https://github.com/cypher-asi/zid?rev=346a9f484567895a174b7ddc5f9ab88639b5f82c)",
 ]
 

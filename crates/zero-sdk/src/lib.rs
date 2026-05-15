@@ -13,7 +13,7 @@ pub use error::SdkError;
 
 // --- Identity re-exports ---
 pub use zero_identity::error::IdentityError;
-pub use zero_identity::machine_key::{MachineKeyEntry, MachineKeyStore};
+pub use zero_identity::machine_key::{MachineKeyEntry, MachineKeyRecord, MachineKeyStore};
 pub use zero_identity::neural_key::{NeuralKey, NeuralKeyShares};
 
 // --- Crypto re-exports ---

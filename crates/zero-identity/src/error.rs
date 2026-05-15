@@ -36,6 +36,17 @@ pub enum IdentityError {
     /// (De)serialisation of a persisted artefact failed.
     #[error("serialization error")]
     SerializationError,
+
+    /// Sealing a [`crate::machine_key::MachineKeyStore`] for on-disk
+    /// persistence failed (CBOR encode, HKDF expand, or AEAD encrypt).
+    #[error("seal error: {0}")]
+    SealError(String),
+
+    /// Unsealing a [`crate::machine_key::MachineKeyStore`] from on-disk
+    /// bytes failed (truncated payload, AEAD authentication, version
+    /// mismatch, or CBOR decode).
+    #[error("unseal error: {0}")]
+    UnsealError(String),
 }
 
 #[cfg(test)]
@@ -87,5 +98,17 @@ mod tests {
     fn serialization_error_displays() {
         let err = IdentityError::SerializationError;
         assert!(!err.to_string().is_empty());
+    }
+
+    #[test]
+    fn seal_error_displays() {
+        let err = IdentityError::SealError("hkdf expand failed".into());
+        assert!(err.to_string().contains("hkdf expand failed"));
+    }
+
+    #[test]
+    fn unseal_error_displays() {
+        let err = IdentityError::UnsealError("aead decrypt".into());
+        assert!(err.to_string().contains("aead decrypt"));
     }
 }

@@ -13,10 +13,17 @@ tokio = { workspace = true, features = ["sync", "rt", "time", "macros"] }
 thiserror.workspace = true
 async-trait.workspace = true
 futures-core.workspace = true
-tokio-stream = "0.1"
+tokio-stream = { version = "0.1", features = ["sync"] }
 
-# TODO: Pin the-grid git dep at exact SHA once upstream repo access is confirmed.
-# the-grid = { git = "https://github.com/cypher-asi/the-grid", rev = "TBD" }
+# Upstream `the-grid` libp2p layer. We bind to `grid-net` directly (rather than
+# `grid-sdk`) because we only need GossipSub publish/subscribe + a dial entry
+# point; pulling the full SDK would also drag in a second `zid` instance via
+# `grid-core`'s path-dep, conflicting with our git-pinned `zid`.
+#
+# Path dep mirrors the local dev pattern (`zos -> zero-sdk-10 -> the-grid`);
+# swap to `git = "https://github.com/cypher-asi/the-grid", rev = "<sha>"` once
+# we want the upstream pinned outside this checkout.
+grid-net = { path = "../../../the-grid/crates/grid-net" }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }

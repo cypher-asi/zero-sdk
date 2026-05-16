@@ -25,7 +25,7 @@ use std::time::Duration;
 use async_trait::async_trait;
 use futures_core::Stream;
 use grid_net::{
-    extract_peer_id, strip_zx_multiaddr, KademliaMode, Multiaddr, NetworkConfig, NetworkEvent,
+    extract_dial_target, strip_zx_multiaddr, KademliaMode, Multiaddr, NetworkConfig, NetworkEvent,
     NetworkService, ZodeId,
 };
 use tokio::sync::{broadcast, mpsc, oneshot, Mutex};
@@ -85,6 +85,14 @@ impl RealGridClient {
     /// 30s default, so we let the operator widen the budget rather than
     /// flapping the connection pill.
     ///
+    /// For circuit-relay multiaddrs of the form
+    /// `/.../p2p/<relay>/p2p-circuit/p2p/<dest>` the dial is considered
+    /// complete only when the swarm reports `PeerConnected(<dest>)` --
+    /// connecting to `<relay>` alone is not sufficient. Otherwise the
+    /// caller would flip a "Connected" flag the moment the relay TCP/QUIC
+    /// handshake lands, well before the circuit hop to `<dest>` has had a
+    /// chance to succeed (or fail).
+    ///
     /// # Errors
     ///
     /// * [`NetworkError::Other`] when the multiaddr is malformed, when the
@@ -102,7 +110,11 @@ impl RealGridClient {
         let parsed_str = strip_zx_multiaddr(multiaddr).into_owned();
         let dial_addr = Multiaddr::from_str(&parsed_str)
             .map_err(|e| NetworkError::Other(format!("invalid multiaddr `{multiaddr}`: {e}")))?;
-        let target_peer = extract_peer_id(&dial_addr);
+        // For circuit-relay addresses this returns the destination peer
+        // (the one *after* `/p2p-circuit/`), not the relay -- otherwise
+        // `await_dial_completion` would treat a bare relay handshake as
+        // a successful end-to-end connect.
+        let target_peer = extract_dial_target(&dial_addr);
 
         let listen_addr = Multiaddr::from_str(LISTEN_ADDR)
             .expect("static LISTEN_ADDR is a valid multiaddr literal");
@@ -384,6 +396,42 @@ mod tests {
                 let _ = e;
             }
             Ok(Ok(_)) => panic!("connect should not succeed for an unreachable test address"),
+            Err(_) => panic!("connect outlived its 20s test budget"),
+        }
+    }
+
+    /// Regression: dialing a circuit-relay multiaddr must not report
+    /// success when only the underlying transport-layer connection to the
+    /// relay would have completed -- the destination peer behind the
+    /// circuit is what callers care about.
+    ///
+    /// We use a non-routable relay IP so even the relay leg never lands;
+    /// the contract being asserted is simply that connect does not return
+    /// `Ok` (whether it surfaces `Timeout` or an upstream `Other` is up
+    /// to the swarm). A pre-fix build of `extract_peer_id` would return
+    /// the relay peer here, but the relay leg can't complete either, so
+    /// this test alone wouldn't catch the bug -- the unit tests in
+    /// `grid-net::addr` lock in the destination-vs-relay distinction.
+    /// This test exists to make sure circuit addresses keep flowing
+    /// through `connect_with_timeout` without parser regressions.
+    #[tokio::test]
+    async fn connect_via_circuit_relay_does_not_succeed_when_unreachable() {
+        let relay = grid_net::Keypair::generate_ed25519().public().to_peer_id();
+        let dest = grid_net::Keypair::generate_ed25519().public().to_peer_id();
+        let unreachable =
+            format!("/ip4/192.0.2.1/tcp/3691/p2p/{relay}/p2p-circuit/p2p/{dest}");
+
+        let result = tokio::time::timeout(
+            Duration::from_secs(20),
+            RealGridClient::connect_with_timeout(&unreachable, Duration::from_secs(5)),
+        )
+        .await;
+
+        match result {
+            Ok(Err(_)) => {}
+            Ok(Ok(_)) => {
+                panic!("connect must not succeed for an unreachable circuit-relay address")
+            }
             Err(_) => panic!("connect outlived its 20s test budget"),
         }
     }
